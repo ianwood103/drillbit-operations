@@ -18,6 +18,7 @@ model Conversation {
   phone          String
   jobType        String    @map("job_type")
   urgency        Int
+  type           ConversationType
   currentStatus  String    @map("current_status")
   currentReason  String?   @map("current_reason")
   isActive       Boolean   @default(true) @map("is_active")
@@ -64,4 +65,9 @@ enum SenderType {
   agent
   customer
   operator
+}
+
+enum ConversationType {
+  call
+  text
 }
