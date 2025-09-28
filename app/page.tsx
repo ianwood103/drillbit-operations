@@ -12,6 +12,7 @@ async function getData() {
         },
       },
     },
+    take: 20,
   });
 
   return conversations;
