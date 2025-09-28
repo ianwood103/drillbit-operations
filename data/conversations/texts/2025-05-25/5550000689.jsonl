@@ -1,0 +1,2 @@
+{"timestamp":"2025-05-25T10:05:05Z","phone":5550000689,"sender_type":"agent","content":"Hello! Thank you for contacting XYZ Home Services. My name is Ava, and I can help you schedule plumbing, electrical, or HVAC repairs. May I have your name, please?","actions":[],"status":"active","reason":null,"job_type":null,"urgency":1,"operator_id":null}
+{"timestamp":"2025-05-25T10:05:40Z","phone":5550000689,"sender_type":"customer","content":"STOP","actions":[],"status":"do_not_contact","reason":"Customer requested to stop all contact.","job_type":null,"urgency":1,"operator_id":null}
