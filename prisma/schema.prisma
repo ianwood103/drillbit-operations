@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Conversation {
+  id             String    @id @default(cuid())
+  phone          String
+  jobType        String    @map("job_type")
+  urgency        Int
+  currentStatus  String    @map("current_status")
+  currentReason  String?   @map("current_reason")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  messages       Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String    @map("conversation_id")
+  timestamp      DateTime
+  senderType     SenderType @map("sender_type")
+  content        String
+  status         String
+  reason         String?
+  operatorId     String?   @map("operator_id")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  actions        MessageAction[]
+
+  @@map("messages")
+}
+
+model MessageAction {
+  id         String   @id @default(cuid())
+  messageId  String   @map("message_id")
+  actionType String   @map("action_type")
+  result     String
+  error      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  message    Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("message_actions")
+}
+
+enum SenderType {
+  agent
+  customer
+  operator
+}
