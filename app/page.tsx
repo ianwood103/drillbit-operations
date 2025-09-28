@@ -1,5 +1,4 @@
 import { PrismaClient, MessageAction } from "@prisma/client";
-import InitButton from "./components/InitButton";
 
 const prisma = new PrismaClient();
 
@@ -23,10 +22,6 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">Database Contents</h1>
-
-      <InitButton />
-
       {conversations.length === 0 ? (
         <div className="text-center text-gray-500">
           <p>No data found. Use the init API to add test data.</p>
