@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { ConversationType, PrismaClient, SenderType } from "@prisma/client";
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 interface MessageData {
   timestamp: string;
   phone: number;
-  sender_type: "agent" | "customer" | "operator";
+  sender_type: SenderType;
   content: string;
   actions: Array<{
     type: string;
@@ -43,7 +43,7 @@ export async function POST() {
       const dates = fs.readdirSync(folderPath);
 
       for (const date of dates) {
-        if (date.startsWith('.')) continue; // Skip hidden files
+        if (date.startsWith(".")) continue; // Skip hidden files
 
         const datePath = path.join(folderPath, date);
         if (!fs.statSync(datePath).isDirectory()) continue;
@@ -51,11 +51,11 @@ export async function POST() {
         const files = fs.readdirSync(datePath);
 
         for (const file of files) {
-          if (!file.endsWith('.jsonl')) continue;
+          if (!file.endsWith(".jsonl")) continue;
 
           const filePath = path.join(datePath, file);
-          const fileContent = fs.readFileSync(filePath, 'utf-8');
-          const lines = fileContent.trim().split('\n');
+          const fileContent = fs.readFileSync(filePath, "utf-8");
+          const lines = fileContent.trim().split("\n");
 
           for (const line of lines) {
             if (!line.trim()) continue;
@@ -67,12 +67,14 @@ export async function POST() {
             if (!conversationData.has(phone)) {
               conversationData.set(phone, {
                 phone,
-                type: folderType === "calls" ? "call" : "text",
+                type:
+                  folderType === "calls"
+                    ? ConversationType.call
+                    : ConversationType.text,
                 jobType: messageData.job_type || "unknown",
                 urgency: messageData.urgency,
                 currentStatus: messageData.status,
                 currentReason: messageData.reason,
-                isActive: true,
               });
             } else {
               // Update with latest status/reason
@@ -80,7 +82,10 @@ export async function POST() {
               existing.currentStatus = messageData.status;
               existing.currentReason = messageData.reason;
               existing.jobType = messageData.job_type || existing.jobType;
-              existing.urgency = Math.max(existing.urgency, messageData.urgency);
+              existing.urgency = Math.max(
+                existing.urgency,
+                messageData.urgency
+              );
             }
 
             // Prepare message data
@@ -92,7 +97,6 @@ export async function POST() {
               status: messageData.status,
               reason: messageData.reason,
               operatorId: messageData.operator_id,
-              isActive: true,
               actions: messageData.actions,
             });
           }
@@ -102,18 +106,20 @@ export async function POST() {
 
     // Bulk insert conversations
     const conversationsToInsert = Array.from(conversationData.values());
-    const insertedConversations = await prisma.conversation.createManyAndReturn({
-      data: conversationsToInsert,
-    });
+    const insertedConversations = await prisma.conversation.createManyAndReturn(
+      {
+        data: conversationsToInsert,
+      }
+    );
 
     // Create phone to conversation ID mapping
     const phoneToConversationId = new Map();
-    insertedConversations.forEach(conv => {
+    insertedConversations.forEach((conv) => {
       phoneToConversationId.set(conv.phone, conv.id);
     });
 
     // Prepare messages with conversation IDs
-    const messagesToInsert = allMessages.map(msg => ({
+    const messagesToInsert = allMessages.map((msg) => ({
       conversationId: phoneToConversationId.get(msg.phone),
       timestamp: msg.timestamp,
       senderType: msg.senderType,
@@ -121,7 +127,6 @@ export async function POST() {
       status: msg.status,
       reason: msg.reason,
       operatorId: msg.operatorId,
-      isActive: msg.isActive,
     }));
 
     // Bulk insert messages

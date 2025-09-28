@@ -19,9 +19,8 @@ model Conversation {
   jobType        String    @map("job_type")
   urgency        Int
   type           ConversationType
-  currentStatus  String    @map("current_status")
+  currentStatus  Status    @map("current_status")
   currentReason  String?   @map("current_reason")
-  isActive       Boolean   @default(true) @map("is_active")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
@@ -36,10 +35,9 @@ model Message {
   timestamp      DateTime
   senderType     SenderType @map("sender_type")
   content        String
-  status         String
+  status         Status
   reason         String?
   operatorId     String?   @map("operator_id")
-  isActive       Boolean   @default(true) @map("is_active")
   createdAt      DateTime  @default(now()) @map("created_at")
 
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -70,4 +68,15 @@ enum SenderType {
 enum ConversationType {
   call
   text
+}
+
+enum Status {
+  declined
+  spam
+  active
+  abandoned
+  do_not_contact
+  blocked_needs_human
+  booked
+  wrong_number
 }
