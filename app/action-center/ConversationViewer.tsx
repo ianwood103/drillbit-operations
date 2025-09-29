@@ -8,6 +8,7 @@ import {
   SenderType,
   Status,
 } from "@prisma/client";
+import Link from "next/link";
 
 type Conversation = Prisma.ConversationGetPayload<{
   include: {
@@ -21,10 +22,12 @@ type Conversation = Prisma.ConversationGetPayload<{
 
 interface ConversationViewerProps {
   initialConversations: Conversation[];
+  singleConversationMode?: boolean;
 }
 
 export default function ConversationViewer({
   initialConversations,
+  singleConversationMode = false,
 }: ConversationViewerProps) {
   const [position, setPosition] = useState(0);
   const [conversations, setConversations] = useState(initialConversations);
@@ -57,90 +60,104 @@ export default function ConversationViewer({
   return (
     <div className="space-y-6 w-full flex flex-row justify-center items-start p-10 relative">
       {/* Position indicator in top right */}
-      <div className="absolute top-0 right-0 bg-tertiary text-white px-3 py-1 rounded-lg text-sm font-medium">
-        {position + 1} of {conversations.length}
-      </div>
+      {!singleConversationMode && (
+        <div className="absolute top-0 right-0 bg-tertiary text-white px-3 py-1 rounded-lg text-sm font-medium">
+          {position + 1} of {conversations.length}
+        </div>
+      )}
 
       {/* Left Arrow */}
-      <button
-        onClick={() => {
-          if (position > 0) {
-            setPosition(position - 1);
+      {!singleConversationMode && (
+        <button
+          onClick={() => {
+            if (position > 0) {
+              setPosition(position - 1);
+            }
+          }}
+          className={
+            position > 0
+              ? "text-2xl text-primary hover:text-white hover:bg-primary rounded-lg p-2 transition-all mr-8 cursor-pointer"
+              : "opacity-0 text-2xl rounded-lg p-2 mr-8"
           }
-        }}
-        className={
-          position > 0
-            ? "text-2xl text-primary hover:text-white hover:bg-primary rounded-lg p-2 transition-all mr-8 cursor-pointer"
-            : "opacity-0 text-2xl rounded-lg p-2 mr-8"
-        }
-      >
-        ←
-      </button>
+        >
+          ←
+        </button>
+      )}
 
       <div
-        className={`rounded-lg p-6 bg-white shadow-sm w-1/2 relative transition-all duration-500 ${
+        className={`rounded-lg p-6 bg-white shadow-sm ${singleConversationMode ? 'w-full max-w-6xl' : 'w-1/2'} relative transition-all duration-500 ${
           isRemoving
             ? "scale-95 opacity-0 translate-y-4"
             : "scale-100 opacity-100 translate-y-0"
         }`}
       >
         {/* Checkbox button in top right */}
-        <button
-          className={`absolute top-4 right-4 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
-            currentConversation.currentStatus === Status.blocked_needs_human
-              ? "border-gray-300 bg-gray-100 cursor-not-allowed"
-              : "border-green-600 bg-green-600 hover:bg-green-700 cursor-pointer"
-          }`}
-          disabled={
-            currentConversation.currentStatus === Status.blocked_needs_human
-          }
-          onClick={() => {
-            if (
-              currentConversation.currentStatus !==
-                Status.blocked_needs_human &&
-              !isRemoving
-            ) {
-              // Start the removal animation
-              setIsRemoving(true);
-
-              // After animation completes, remove the conversation
-              setTimeout(() => {
-                setConversations((prevConversations) =>
-                  prevConversations.filter(
-                    (conv) => conv.id !== currentConversation.id
-                  )
-                );
-
-                // Reset position if we removed the current conversation
-                if (position >= conversations.length - 1) {
-                  setPosition(Math.max(0, position - 1));
-                }
-
-                // Reset animation state
-                setIsRemoving(false);
-              }, 500); // Match the duration-500 CSS class
+        {!singleConversationMode && (
+          <button
+            className={`absolute top-4 right-4 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
+              currentConversation.currentStatus === Status.blocked_needs_human
+                ? "border-gray-300 bg-gray-100 cursor-not-allowed"
+                : "border-green-600 bg-green-600 hover:bg-green-700 cursor-pointer"
+            }`}
+            disabled={
+              currentConversation.currentStatus === Status.blocked_needs_human
             }
-          }}
-        >
-          {currentConversation.currentStatus !== Status.blocked_needs_human && (
-            <svg
-              className="w-4 h-4 text-white"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          )}
-        </button>
+            onClick={() => {
+              if (
+                currentConversation.currentStatus !==
+                  Status.blocked_needs_human &&
+                !isRemoving
+              ) {
+                // Start the removal animation
+                setIsRemoving(true);
+
+                // After animation completes, remove the conversation
+                setTimeout(() => {
+                  setConversations((prevConversations) =>
+                    prevConversations.filter(
+                      (conv) => conv.id !== currentConversation.id
+                    )
+                  );
+
+                  // Reset position if we removed the current conversation
+                  if (position >= conversations.length - 1) {
+                    setPosition(Math.max(0, position - 1));
+                  }
+
+                  // Reset animation state
+                  setIsRemoving(false);
+                }, 500); // Match the duration-500 CSS class
+              }
+            }}
+          >
+            {currentConversation.currentStatus !== Status.blocked_needs_human && (
+              <svg
+                className="w-4 h-4 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </button>
+        )}
 
         <div className="mb-4">
-          <h2 className="text-xl font-semibold text-primary cursor-pointer underline">
-            {currentConversation.id}
-          </h2>
+          {singleConversationMode ? (
+            <h2 className="text-xl font-semibold text-primary">
+              Conversation {currentConversation.id.slice(-8)}
+            </h2>
+          ) : (
+            <Link href={`/conversations/${currentConversation.id}`}>
+              <h2 className="text-xl font-semibold text-primary cursor-pointer underline hover:text-secondary">
+                Conversation {currentConversation.id.slice(-8)}
+              </h2>
+            </Link>
+          )}
           <div className="text-sm text-tertiary mt-2">
             <p>
               <b>Phone Number: </b>
@@ -367,7 +384,7 @@ export default function ConversationViewer({
       </div>
 
       {/* Right Arrow */}
-      {position < conversations.length - 1 && (
+      {!singleConversationMode && position < conversations.length - 1 && (
         <button
           onClick={() => setPosition(position + 1)}
           className="text-2xl text-primary hover:text-white hover:bg-primary rounded-lg p-2 transition-all ml-8 cursor-pointer"

@@ -2,8 +2,18 @@
 
 import InitButton from "./InitButton";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function NavBar() {
+  const pathname = usePathname();
+
+  const navItems = [
+    { href: "/action-center", label: "ACTION CENTER" },
+    { href: "/conversations", label: "CONVERSATIONS" },
+    { href: "/analytics", label: "ANALYTICS" },
+  ];
+
   return (
     <nav className="fixed left-0 top-0 h-full w-64 bg-background text-tertiary flex flex-col z-10 border-r border-dashed border-border">
       {/* Header */}
@@ -19,15 +29,22 @@ export default function NavBar() {
 
       {/* Navigation Items */}
       <div className="flex-1 p-4 space-y-2">
-        <button className="w-full text-center text-sm px-4 py-3 rounded-lg hover:bg-white hover:cursor-pointer transition-colors">
-          ACTION CENTER
-        </button>
-        <button className="w-full text-center text-sm px-4 py-3 rounded-lg hover:bg-white hover:cursor-pointer transition-colors">
-          CONVERSATIONS
-        </button>
-        <button className="w-full text-center text-sm px-4 py-3 rounded-lg hover:bg-white hover:cursor-pointer transition-colors">
-          ANALYTICS
-        </button>
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`w-full text-center text-sm px-4 py-3 rounded-lg transition-colors block ${
+                isActive
+                  ? "bg-white text-black"
+                  : "hover:bg-white hover:text-black"
+              }`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Special Section for Database Actions */}
