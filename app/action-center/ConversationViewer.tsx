@@ -34,11 +34,13 @@ export default function ConversationViewer({
   const [textMessage, setTextMessage] = useState("");
   const [messageStatus, setMessageStatus] = useState("");
   const [messageReason, setMessageReason] = useState("");
+  const [messageOperatorId, setMessageOperatorId] = useState("");
   const [isRemoving, setIsRemoving] = useState(false);
   const [showCallModal, setShowCallModal] = useState(false);
   const [callResults, setCallResults] = useState("");
   const [callStatus, setCallStatus] = useState("");
   const [callReason, setCallReason] = useState("");
+  const [callOperatorId, setCallOperatorId] = useState("");
 
   // Format phone number from 7706561244 to (770) 656-1244
   const formatPhoneNumber = (phone: string) => {
@@ -62,98 +64,113 @@ export default function ConversationViewer({
   const currentConversation = conversations[position];
 
   return (
-    <div className="space-y-6 w-full flex flex-row justify-center items-start p-10 relative">
-      {/* Position indicator in top right */}
+    <div className="w-full mt-10">
+      {/* Navigation Controls */}
       {!singleConversationMode && (
-        <div className="absolute top-0 right-0 bg-tertiary text-white px-3 py-1 rounded-lg text-sm font-medium">
-          {position + 1} of {conversations.length}
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={() => {
+              if (position > 0) {
+                setPosition(position - 1);
+              }
+            }}
+            className={
+              position > 0
+                ? "flex items-center gap-2 text-primary hover:text-secondary transition-colors cursor-pointer"
+                : "opacity-0 flex items-center gap-2 cursor-default"
+            }
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Previous
+          </button>
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-tertiary">
+              {position + 1} of {conversations.length}
+            </span>
+            {currentConversation.currentStatus !==
+              Status.blocked_needs_human && (
+              <button
+                title="Clear From Queue"
+                className="flex items-center gap-2 bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition-colors text-sm cursor-pointer"
+                onClick={() => {
+                  if (!isRemoving) {
+                    setIsRemoving(true);
+                    setTimeout(() => {
+                      setConversations((prevConversations) =>
+                        prevConversations.filter(
+                          (conv) => conv.id !== currentConversation.id
+                        )
+                      );
+                      if (position >= conversations.length - 1) {
+                        setPosition(Math.max(0, position - 1));
+                      }
+                      setIsRemoving(false);
+                    }, 500);
+                  }
+                }}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Clear From Queue
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={() => setPosition(position + 1)}
+            className={
+              position < conversations.length - 1
+                ? "flex items-center gap-2 text-primary hover:text-secondary transition-colors cursor-pointer"
+                : "opacity-0 cursor-default"
+            }
+          >
+            Next
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
         </div>
       )}
 
-      {/* Left Arrow */}
-      {!singleConversationMode && (
-        <button
-          onClick={() => {
-            if (position > 0) {
-              setPosition(position - 1);
-            }
-          }}
-          className={
-            position > 0
-              ? "text-2xl text-primary hover:text-white hover:bg-primary rounded-lg p-2 transition-all mr-8 cursor-pointer"
-              : "opacity-0 text-2xl rounded-lg p-2 mr-8"
-          }
-        >
-          ←
-        </button>
-      )}
-
       <div
-        className={`rounded-lg p-6 bg-white shadow-sm ${
-          singleConversationMode ? "w-full max-w-6xl" : "w-1/2"
-        } relative transition-all duration-500 ${
+        className={`bg-white rounded-lg shadow-sm p-6 transition-all duration-500 ${
           isRemoving
             ? "scale-95 opacity-0 translate-y-4"
             : "scale-100 opacity-100 translate-y-0"
         }`}
       >
-        {/* Checkbox button in top right */}
-        {!singleConversationMode && (
-          <button
-            title="Clear From Queue"
-            className={`absolute top-4 right-4 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
-              currentConversation.currentStatus === Status.blocked_needs_human
-                ? "border-gray-300 bg-gray-100 cursor-not-allowed"
-                : "border-green-600 bg-green-600 hover:bg-green-700 cursor-pointer"
-            }`}
-            disabled={
-              currentConversation.currentStatus === Status.blocked_needs_human
-            }
-            onClick={() => {
-              if (
-                currentConversation.currentStatus !==
-                  Status.blocked_needs_human &&
-                !isRemoving
-              ) {
-                // Start the removal animation
-                setIsRemoving(true);
-
-                // After animation completes, remove the conversation
-                setTimeout(() => {
-                  setConversations((prevConversations) =>
-                    prevConversations.filter(
-                      (conv) => conv.id !== currentConversation.id
-                    )
-                  );
-
-                  // Reset position if we removed the current conversation
-                  if (position >= conversations.length - 1) {
-                    setPosition(Math.max(0, position - 1));
-                  }
-
-                  // Reset animation state
-                  setIsRemoving(false);
-                }, 500); // Match the duration-500 CSS class
-              }
-            }}
-          >
-            {currentConversation.currentStatus !==
-              Status.blocked_needs_human && (
-              <svg
-                className="w-4 h-4 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
-          </button>
-        )}
-
         <div className="mb-4">
           {singleConversationMode ? (
             <h2 className="text-xl font-semibold text-primary">
@@ -266,7 +283,7 @@ export default function ConversationViewer({
                 required
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-tertiary mb-1">
                     Status
@@ -299,6 +316,19 @@ export default function ConversationViewer({
                     placeholder="Enter reason..."
                     className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                     required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-tertiary mb-1">
+                    Operator ID
+                  </label>
+                  <input
+                    type="text"
+                    value={messageOperatorId}
+                    onChange={(e) => setMessageOperatorId(e.target.value)}
+                    placeholder="Enter operator ID..."
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                   />
                 </div>
               </div>
@@ -338,7 +368,7 @@ export default function ConversationViewer({
                         status: messageStatus,
                         reason: messageReason || null,
                         timestamp: new Date().toISOString(),
-                        operatorId: null,
+                        operatorId: messageOperatorId || null,
                       }),
                     });
 
@@ -377,6 +407,7 @@ export default function ConversationViewer({
                       setTextMessage("");
                       setMessageStatus("");
                       setMessageReason("");
+                      setMessageOperatorId("");
                     } else {
                       const error = await response.json();
                       console.error("Failed to send message:", error);
@@ -431,7 +462,7 @@ export default function ConversationViewer({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-tertiary mb-1">
                     Status
@@ -466,6 +497,19 @@ export default function ConversationViewer({
                     required
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-tertiary mb-1">
+                    Operator ID
+                  </label>
+                  <input
+                    type="text"
+                    value={callOperatorId}
+                    onChange={(e) => setCallOperatorId(e.target.value)}
+                    placeholder="Enter operator ID..."
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3 pt-3">
@@ -475,6 +519,7 @@ export default function ConversationViewer({
                     setCallResults("");
                     setCallStatus("");
                     setCallReason("");
+                    setCallOperatorId("");
                   }}
                   className="flex-1 bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
                 >
@@ -515,7 +560,7 @@ export default function ConversationViewer({
                           status: callStatus,
                           reason: callReason || null,
                           timestamp: new Date().toISOString(),
-                          operatorId: null,
+                          operatorId: callOperatorId || null,
                         }),
                       });
 
@@ -558,6 +603,7 @@ export default function ConversationViewer({
                         setCallResults("");
                         setCallStatus("");
                         setCallReason("");
+                        setCallOperatorId("");
                       } else {
                         const error = await response.json();
                         console.error("Failed to record call results:", error);
@@ -575,16 +621,6 @@ export default function ConversationViewer({
             </div>
           </div>
         </div>
-      )}
-
-      {/* Right Arrow */}
-      {!singleConversationMode && position < conversations.length - 1 && (
-        <button
-          onClick={() => setPosition(position + 1)}
-          className="text-2xl text-primary hover:text-white hover:bg-primary rounded-lg p-2 transition-all ml-8 cursor-pointer"
-        >
-          →
-        </button>
       )}
     </div>
   );

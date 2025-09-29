@@ -491,7 +491,7 @@ export default function Analytics() {
     <div className="min-h-screen p-8 w-full bg-background">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-left text-secondary">
+          <h1 className="text-3xl mb-2 font-bold text-left text-secondary">
             Analytics
           </h1>
           <p className="text-xs text-tertiary">

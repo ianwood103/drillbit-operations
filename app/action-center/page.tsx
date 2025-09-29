@@ -33,7 +33,7 @@ export default async function ActionCenter() {
     <div className="min-h-screen p-8 flex flex-col justify-center w-full bg-background">
       <div className="flex justify-between items-start mb-2">
         <div>
-          <h1 className="text-3xl font-bold text-left text-secondary">
+          <h1 className="text-3xl font-bold mb-2 text-left text-secondary">
             Action Center
           </h1>
           <p className="text-xs text-tertiary">
