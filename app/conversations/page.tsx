@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Prisma, ConversationType, Status } from "@prisma/client";
 import Link from "next/link";
+import RefreshButton from "../components/RefreshButton";
 
 type Conversation = Prisma.ConversationGetPayload<{
   include: {
@@ -121,13 +122,16 @@ export default function Conversations() {
 
   return (
     <div className="min-h-screen p-8 w-full bg-background">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2 text-left text-secondary">
-          Conversations
-        </h1>
-        <p className="text-xs text-tertiary">
-          VIEW AND MANAGE ALL CONVERSATION HISTORY AND ACTIVITY
-        </p>
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 text-left text-secondary">
+            Conversations
+          </h1>
+          <p className="text-xs text-tertiary">
+            VIEW AND MANAGE ALL CONVERSATION HISTORY AND ACTIVITY
+          </p>
+        </div>
+        <RefreshButton />
       </div>
 
       {/* Filters */}

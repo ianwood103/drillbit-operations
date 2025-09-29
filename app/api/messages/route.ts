@@ -3,6 +3,63 @@ import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
+    // Build where clause for date filtering
+    const whereClause: any = {};
+
+    if (startDate || endDate) {
+      whereClause.timestamp = {};
+
+      if (startDate) {
+        whereClause.timestamp.gte = new Date(startDate);
+      }
+
+      if (endDate) {
+        whereClause.timestamp.lte = new Date(endDate);
+      }
+    }
+
+    // Query messages with related data
+    const messages = await prisma.message.findMany({
+      where: whereClause,
+      include: {
+        conversation: true,
+        actions: true,
+      },
+      orderBy: {
+        timestamp: 'desc',
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      dateRange: {
+        startDate: startDate || null,
+        endDate: endDate || null
+      },
+      totalMessages: messages.length,
+      messages
+    });
+
+  } catch (error) {
+    console.error("Error retrieving messages:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to retrieve messages"
+      },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
