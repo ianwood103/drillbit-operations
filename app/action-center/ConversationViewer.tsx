@@ -35,6 +35,10 @@ export default function ConversationViewer({
   const [messageStatus, setMessageStatus] = useState("");
   const [messageReason, setMessageReason] = useState("");
   const [isRemoving, setIsRemoving] = useState(false);
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [callResults, setCallResults] = useState("");
+  const [callStatus, setCallStatus] = useState("");
+  const [callReason, setCallReason] = useState("");
 
   // Format phone number from 7706561244 to (770) 656-1244
   const formatPhoneNumber = (phone: string) => {
@@ -85,7 +89,9 @@ export default function ConversationViewer({
       )}
 
       <div
-        className={`rounded-lg p-6 bg-white shadow-sm ${singleConversationMode ? 'w-full max-w-6xl' : 'w-1/2'} relative transition-all duration-500 ${
+        className={`rounded-lg p-6 bg-white shadow-sm ${
+          singleConversationMode ? "w-full max-w-6xl" : "w-1/2"
+        } relative transition-all duration-500 ${
           isRemoving
             ? "scale-95 opacity-0 translate-y-4"
             : "scale-100 opacity-100 translate-y-0"
@@ -94,6 +100,7 @@ export default function ConversationViewer({
         {/* Checkbox button in top right */}
         {!singleConversationMode && (
           <button
+            title="Clear From Queue"
             className={`absolute top-4 right-4 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
               currentConversation.currentStatus === Status.blocked_needs_human
                 ? "border-gray-300 bg-gray-100 cursor-not-allowed"
@@ -130,7 +137,8 @@ export default function ConversationViewer({
               }
             }}
           >
-            {currentConversation.currentStatus !== Status.blocked_needs_human && (
+            {currentConversation.currentStatus !==
+              Status.blocked_needs_human && (
               <svg
                 className="w-4 h-4 text-white"
                 fill="currentColor"
@@ -152,10 +160,11 @@ export default function ConversationViewer({
               Conversation {currentConversation.id.slice(-8)}
             </h2>
           ) : (
-            <Link href={`/conversations/${currentConversation.id}`}>
-              <h2 className="text-xl font-semibold text-primary cursor-pointer underline hover:text-secondary">
-                Conversation {currentConversation.id.slice(-8)}
-              </h2>
+            <Link
+              className="text-xl font-semibold text-primary cursor-pointer underline hover:text-secondary"
+              href={`/conversations/${currentConversation.id}`}
+            >
+              Conversation {currentConversation.id.slice(-8)}{" "}
             </Link>
           )}
           <div className="text-sm text-tertiary mt-2">
@@ -233,7 +242,10 @@ export default function ConversationViewer({
         {/* Action Section */}
         <div className="mt-6 pt-4 border-t border-gray-200">
           {currentConversation.type === ConversationType.call ? (
-            <button className="w-full bg-primary text-white font-semibold py-4 px-6 rounded-lg cursor-pointer transition-colors text-lg flex items-center justify-center gap-3">
+            <button
+              onClick={() => setShowCallModal(true)}
+              className="w-full bg-primary text-white font-semibold py-4 px-6 rounded-lg cursor-pointer transition-colors text-lg flex items-center justify-center gap-3"
+            >
               <svg
                 className="w-6 h-6 text-white"
                 fill="currentColor"
@@ -382,6 +394,188 @@ export default function ConversationViewer({
           )}
         </div>
       </div>
+
+      {/* Call Modal */}
+      {showCallModal && (
+        <div className="fixed inset-0 bg-[rgba(107,114,128,0.75)] flex items-center justify-center z-50 h-screen">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-xl font-semibold text-primary mb-4">
+              Make Call
+            </h3>
+
+            <div className="mb-4 p-4 bg-gray-100 rounded-lg">
+              <p className="text-center text-gray-700">
+                Pretend this is making a call...
+              </p>
+              <p className="text-center text-sm text-gray-500 mt-1">
+                Calling {formatPhoneNumber(currentConversation.phone)}
+              </p>
+            </div>
+
+            <h4 className="text-lg font-medium text-secondary mb-3">
+              Record the results below:
+            </h4>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-tertiary mb-1">
+                  Call Results
+                </label>
+                <textarea
+                  value={callResults}
+                  onChange={(e) => setCallResults(e.target.value)}
+                  placeholder="Enter call results..."
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-tertiary mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={callStatus}
+                    onChange={(e) => setCallStatus(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                    required
+                  >
+                    <option value="">Select status...</option>
+                    {Object.values(Status).map((status) => (
+                      <option key={status} value={status}>
+                        {status
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-tertiary mb-1">
+                    Reason
+                  </label>
+                  <input
+                    type="text"
+                    value={callReason}
+                    onChange={(e) => setCallReason(e.target.value)}
+                    placeholder="Enter reason..."
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  onClick={() => {
+                    setShowCallModal(false);
+                    setCallResults("");
+                    setCallStatus("");
+                    setCallReason("");
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  className={`flex-1 font-semibold py-2 px-4 rounded-lg transition-colors ${
+                    callResults.trim() && callStatus && callReason.trim()
+                      ? "bg-primary text-white hover:bg-secondary"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                  disabled={
+                    !callResults.trim() || !callStatus || !callReason.trim()
+                  }
+                  onClick={async () => {
+                    // Validate all fields are filled
+                    if (
+                      !callResults.trim() ||
+                      !callStatus ||
+                      !callReason.trim()
+                    ) {
+                      alert(
+                        "Please fill in all fields (results, status, and reason) before submitting."
+                      );
+                      return;
+                    }
+
+                    try {
+                      const response = await fetch("/api/messages", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          conversationId: currentConversation.id,
+                          senderType: SenderType.operator,
+                          content: callResults,
+                          status: callStatus,
+                          reason: callReason || null,
+                          timestamp: new Date().toISOString(),
+                          operatorId: null,
+                        }),
+                      });
+
+                      if (response.ok) {
+                        const result = await response.json();
+                        console.log(
+                          "Call results recorded successfully:",
+                          result
+                        );
+
+                        // Update the conversations state with the new message and updated conversation
+                        setConversations((prevConversations) => {
+                          return prevConversations.map((conv) => {
+                            if (conv.id === currentConversation.id) {
+                              return {
+                                ...conv,
+                                // Update conversation status and reason
+                                currentStatus:
+                                  result.data.conversation.currentStatus,
+                                currentReason:
+                                  result.data.conversation.currentReason,
+                                // Add the new message to the messages array
+                                messages: [
+                                  ...conv.messages,
+                                  {
+                                    ...result.data.message,
+                                    timestamp: new Date(
+                                      result.data.message.timestamp
+                                    ),
+                                  },
+                                ],
+                              };
+                            }
+                            return conv;
+                          });
+                        });
+
+                        // Close modal and clear form fields
+                        setShowCallModal(false);
+                        setCallResults("");
+                        setCallStatus("");
+                        setCallReason("");
+                      } else {
+                        const error = await response.json();
+                        console.error("Failed to record call results:", error);
+                        alert("Failed to record call results: " + error.error);
+                      }
+                    } catch (error) {
+                      console.error("Error recording call results:", error);
+                      alert("Error recording call results");
+                    }
+                  }}
+                >
+                  Record Results
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Right Arrow */}
       {!singleConversationMode && position < conversations.length - 1 && (
