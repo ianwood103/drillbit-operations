@@ -1,24 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Drillbit Operations
 
-## Getting Started
+A Next.js 15 application using the App Router that manages conversation data for a customer service system. The application displays and processes conversation records including messages, actions, and metadata from both call and text conversations.
 
-First, run the development server:
+## Features
+
+- **Conversation Management**: Track phone numbers, job types, urgency levels, and status
+- **Message Handling**: Display messages with sender types, content, timestamps, and associated actions
+- **Data Import System**: Bulk import conversation data from JSONL files
+- **Database Integration**: SQLite database with Prisma ORM for data persistence
+- **Real-time Display**: View conversation metadata, message history, and automated actions
+
+## Installation
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Set up the database:
+
+```bash
+npx prisma migrate dev
+```
+
+3. Generate Prisma client (if needed):
+
+```bash
+npx prisma generate
+```
+
+4. Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+5. Reset database:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Click reset database in UI to initialize with test data.
 
 ## Learn More
 
